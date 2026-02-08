@@ -1,0 +1,28 @@
+{
+	"schemaVersion": 1,
+	"id": "minescoreboard",
+	"version": "${version}",
+	"name": "MineScoreboard",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"AB"
+	],
+	"contact": {
+		"homepage": "https://example.com/",
+		"sources": "https://github.com/OrnitheMC/ornithe-template-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/minescoreboard/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"init": [
+      "cn.royan.minescoreboard.MineScoreboardMod"
+		]
+	},
+	"mixins": [
+    "minescoreboard.mixins.json"
+	],
+	"depends": {
+		"osl-entrypoints": ">=0.4.0"
+	}
+}
