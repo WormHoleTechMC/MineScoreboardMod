@@ -3,13 +3,12 @@
 	"id": "minescoreboard",
 	"version": "${version}",
 	"name": "MineScoreboard",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "A server-side scoreboard mod that tracks player block mining and placing statistics.",
 	"authors": [
 		"AB"
 	],
 	"contact": {
-		"homepage": "https://example.com/",
-		"sources": "https://github.com/OrnitheMC/ornithe-template-mod"
+		"sources": "https://github.com/Royan-0/MineScoreboardMod"
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/minescoreboard/icon.png",

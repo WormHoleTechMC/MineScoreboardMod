@@ -1,13 +1,8 @@
 package cn.royan.minescoreboard.mixin;
 
 import cn.royan.minescoreboard.MineScoreboardMod;
-import cn.royan.minescoreboard.PlayerBoardManager;
 import net.minecraft.entity.living.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.scoreboard.ScoreboardScore;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerPlayerInteractionManager;
 import net.minecraft.server.entity.living.player.ServerPlayerEntity;
 import net.minecraft.world.World;
@@ -25,18 +20,8 @@ public class PlaceBlockMixin {
 
 	@Inject(method = "useBlock", at = @At("TAIL"))
 	private void mineScoreboard$onPlaceBlock(PlayerEntity player, World world, ItemStack itemInHand, int x, int y, int z, int face, float faceX, float faceY, float faceZ, CallbackInfoReturnable<Boolean> cir) {
-		if (cir.getReturnValue()) {
-			Scoreboard scoreboard = MinecraftServer.getInstance().getWorld(0).getScoreboard();
-			ScoreboardObjective objective = scoreboard.getObjective("Place");
-			if (objective != null) {
-				ScoreboardScore score = scoreboard.getScore(this.player.getName(), objective);
-				score.increase(1);
-				PlayerBoardManager.onScoreUpdate("Place", score);
-
-				MineScoreboardMod.increaseTotalPlace();
-				ScoreboardScore totalScore = scoreboard.getScore(MineScoreboardMod.TOTAL_PLACE_NAME, objective);
-				PlayerBoardManager.onScoreUpdate("Place", totalScore);
-			}
+		if (cir.getReturnValue() && itemInHand != null) {
+			MineScoreboardMod.increasePlayerScore(this.player, MineScoreboardMod.BOARD_PLACE);
 		}
 	}
 }

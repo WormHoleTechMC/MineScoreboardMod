@@ -1,28 +1,25 @@
 package cn.royan.minescoreboard;
 
-import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.ScoreboardDisplayS2CPacket;
+import net.minecraft.network.packet.s2c.play.ScoreboardObjectiveS2CPacket;
 import net.minecraft.network.packet.s2c.play.ScoreboardScoreS2CPacket;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.scoreboard.ScoreboardScore;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.entity.living.player.ServerPlayerEntity;
-import net.minecraft.server.scoreboard.ServerScoreboard;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerBoardManager {
 
-	private static final Map<UUID, String> playerBoards = new HashMap<>();
-	private static final Set<UUID> hiddenPlayers = new HashSet<>();
-	private static final String DEFAULT_BOARD = "Dig";
+	private static final Map<UUID, String> playerBoards = new ConcurrentHashMap<>();
+	private static final Set<UUID> hiddenPlayers = ConcurrentHashMap.newKeySet();
+	private static final String DEFAULT_BOARD = MineScoreboardMod.BOARD_DIG;
 
 	public static void setPlayerBoard(ServerPlayerEntity player, String boardName) {
 		playerBoards.put(player.getUuid(), boardName);
@@ -51,13 +48,12 @@ public class PlayerBoardManager {
 	}
 
 	private static void sendBoardScores(ServerPlayerEntity player, String boardName) {
-		Scoreboard scoreboard = MinecraftServer.getInstance().getWorld(0).getScoreboard();
+		Scoreboard scoreboard = MineScoreboardMod.getScoreboard();
 		ScoreboardObjective objective = scoreboard.getObjective(boardName);
 
 		if (objective != null) {
-			Collection scores = scoreboard.getScores(objective);
-			for (Object obj : scores) {
-				ScoreboardScore score = (ScoreboardScore) obj;
+			Collection<ScoreboardScore> scores = scoreboard.getScores(objective);
+			for (ScoreboardScore score : scores) {
 				ScoreboardScoreS2CPacket packet = new ScoreboardScoreS2CPacket(score, 0);
 				player.networkHandler.sendPacket(packet);
 			}
@@ -65,44 +61,12 @@ public class PlayerBoardManager {
 		}
 	}
 
-	private static void sendFullBoardData(ServerPlayerEntity player, String boardName) {
-		Scoreboard scoreboard = MinecraftServer.getInstance().getWorld(0).getScoreboard();
-
-		if (scoreboard instanceof ServerScoreboard) {
-			ServerScoreboard serverScoreboard = (ServerScoreboard) scoreboard;
-
-			ScoreboardObjective digObjective = scoreboard.getObjective("Dig");
-			ScoreboardObjective placeObjective = scoreboard.getObjective("Place");
-
-			if (digObjective != null) {
-				List packets = serverScoreboard.createStartDisplayingObjectivePackets(digObjective);
-				for (Object obj : packets) {
-					player.networkHandler.sendPacket((Packet) obj);
-				}
-			}
-
-			if (placeObjective != null) {
-				List packets = serverScoreboard.createStartDisplayingObjectivePackets(placeObjective);
-				for (Object obj : packets) {
-					player.networkHandler.sendPacket((Packet) obj);
-				}
-			}
-
-			if (!hiddenPlayers.contains(player.getUuid())) {
-				ScoreboardObjective selectedObjective = scoreboard.getObjective(boardName);
-				if (selectedObjective != null) {
-					player.networkHandler.sendPacket(new ScoreboardDisplayS2CPacket(1, selectedObjective));
-				}
-			}
-		}
-	}
-
 	public static void onScoreUpdate(String boardName, ScoreboardScore score) {
-		List players = MinecraftServer.getInstance().getPlayerManager().players;
+		@SuppressWarnings("unchecked")
+		java.util.List<ServerPlayerEntity> players = MinecraftServer.getInstance().getPlayerManager().players;
 		ScoreboardScoreS2CPacket packet = new ScoreboardScoreS2CPacket(score, 0);
 
-		for (Object obj : players) {
-			ServerPlayerEntity onlinePlayer = (ServerPlayerEntity) obj;
+		for (ServerPlayerEntity onlinePlayer : players) {
 			String viewingBoard = getPlayerBoard(onlinePlayer.getUuid());
 
 			if (boardName.equals(viewingBoard) && !hiddenPlayers.contains(onlinePlayer.getUuid())) {
@@ -112,10 +76,24 @@ public class PlayerBoardManager {
 	}
 
 	public static void onPlayerJoin(ServerPlayerEntity player) {
+		Scoreboard scoreboard = MineScoreboardMod.getScoreboard();
+
+		ScoreboardObjective digObjective = scoreboard.getObjective(MineScoreboardMod.BOARD_DIG);
+		if (digObjective != null) {
+			player.networkHandler.sendPacket(new ScoreboardObjectiveS2CPacket(digObjective, 0));
+		}
+
+		ScoreboardObjective placeObjective = scoreboard.getObjective(MineScoreboardMod.BOARD_PLACE);
+		if (placeObjective != null) {
+			player.networkHandler.sendPacket(new ScoreboardObjectiveS2CPacket(placeObjective, 0));
+		}
+
 		String board = getPlayerBoard(player.getUuid());
-		sendFullBoardData(player, board);
+		sendBoardScores(player, board);
 	}
 
 	public static void onPlayerLeave(ServerPlayerEntity player) {
+		playerBoards.remove(player.getUuid());
+		hiddenPlayers.remove(player.getUuid());
 	}
 }

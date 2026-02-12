@@ -1,5 +1,6 @@
 package cn.royan.minescoreboard.command;
 
+import cn.royan.minescoreboard.MineScoreboardMod;
 import cn.royan.minescoreboard.PlayerBoardManager;
 import net.minecraft.server.command.AbstractCommand;
 import net.minecraft.server.command.Command;
@@ -41,10 +42,10 @@ public class BoardCommand extends AbstractCommand implements Comparable {
 		String arg = args[0].toLowerCase();
 
 		if ("dig".equals(arg)) {
-			PlayerBoardManager.setPlayerBoard(player, "Dig");
+			PlayerBoardManager.setPlayerBoard(player, MineScoreboardMod.BOARD_DIG);
 			source.sendMessage(new LiteralText("Switched to Dig board"));
 		} else if ("place".equals(arg)) {
-			PlayerBoardManager.setPlayerBoard(player, "Place");
+			PlayerBoardManager.setPlayerBoard(player, MineScoreboardMod.BOARD_PLACE);
 			source.sendMessage(new LiteralText("Switched to Place board"));
 		} else if ("hide".equals(arg)) {
 			PlayerBoardManager.hideBoard(player);

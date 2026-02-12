@@ -5,29 +5,32 @@ import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.scoreboard.ScoreboardScore;
 import net.minecraft.scoreboard.criterion.ScoreboardCriterion;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.entity.living.player.ServerPlayerEntity;
 import net.ornithemc.osl.entrypoints.api.ModInitializer;
 import net.ornithemc.osl.lifecycle.api.server.MinecraftServerEvents;
 
 public class MineScoreboardMod implements ModInitializer {
 
+	public static final String BOARD_DIG = "Dig";
+	public static final String BOARD_PLACE = "Place";
 	public static final String TOTAL_DIG_NAME = "§eTotal_Dig";
 	public static final String TOTAL_PLACE_NAME = "§9Total_Place";
 
 	@Override
 	public void init() {
 		MinecraftServerEvents.READY.register((a) -> {
-			Scoreboard scoreboard = MinecraftServer.getInstance().getWorld(0).getScoreboard();
+			Scoreboard scoreboard = getScoreboard();
 
-			ScoreboardObjective digObjective = scoreboard.getObjective("Dig");
+			ScoreboardObjective digObjective = scoreboard.getObjective(BOARD_DIG);
 			if (digObjective == null) {
-				scoreboard.createObjective("Dig", ScoreboardCriterion.DUMMY).setDisplayName("Dig");
-				digObjective = scoreboard.getObjective("Dig");
+				scoreboard.createObjective(BOARD_DIG, ScoreboardCriterion.DUMMY).setDisplayName(BOARD_DIG);
+				digObjective = scoreboard.getObjective(BOARD_DIG);
 			}
 
-			ScoreboardObjective placeObjective = scoreboard.getObjective("Place");
+			ScoreboardObjective placeObjective = scoreboard.getObjective(BOARD_PLACE);
 			if (placeObjective == null) {
-				scoreboard.createObjective("Place", ScoreboardCriterion.DUMMY).setDisplayName("Place");
-				placeObjective = scoreboard.getObjective("Place");
+				scoreboard.createObjective(BOARD_PLACE, ScoreboardCriterion.DUMMY).setDisplayName(BOARD_PLACE);
+				placeObjective = scoreboard.getObjective(BOARD_PLACE);
 			}
 
 			initTotalScores(scoreboard, digObjective, placeObjective);
@@ -58,19 +61,24 @@ public class MineScoreboardMod implements ModInitializer {
 		}
 	}
 
-	public static void increaseTotalDig() {
-		Scoreboard scoreboard = MinecraftServer.getInstance().getWorld(0).getScoreboard();
-		ScoreboardObjective objective = scoreboard.getObjective("Dig");
-		if (objective != null) {
-			scoreboard.getScore(TOTAL_DIG_NAME, objective).increase(1);
-		}
+	public static Scoreboard getScoreboard() {
+		return MinecraftServer.getInstance().getWorld(0).getScoreboard();
 	}
 
-	public static void increaseTotalPlace() {
-		Scoreboard scoreboard = MinecraftServer.getInstance().getWorld(0).getScoreboard();
-		ScoreboardObjective objective = scoreboard.getObjective("Place");
-		if (objective != null) {
-			scoreboard.getScore(TOTAL_PLACE_NAME, objective).increase(1);
+	public static void increasePlayerScore(ServerPlayerEntity player, String boardName) {
+		Scoreboard scoreboard = getScoreboard();
+		ScoreboardObjective objective = scoreboard.getObjective(boardName);
+		if (objective == null) {
+			return;
 		}
+
+		ScoreboardScore score = scoreboard.getScore(player.getName(), objective);
+		score.increase(1);
+		PlayerBoardManager.onScoreUpdate(boardName, score);
+
+		String totalName = BOARD_DIG.equals(boardName) ? TOTAL_DIG_NAME : TOTAL_PLACE_NAME;
+		ScoreboardScore totalScore = scoreboard.getScore(totalName, objective);
+		totalScore.increase(1);
+		PlayerBoardManager.onScoreUpdate(boardName, totalScore);
 	}
 }
