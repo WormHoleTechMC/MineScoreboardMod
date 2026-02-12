@@ -1,5 +1,6 @@
 package cn.royan.minescoreboard.mixin;
 
+import cn.royan.minescoreboard.MineScoreboardMod;
 import cn.royan.minescoreboard.PlayerBoardManager;
 import net.minecraft.entity.living.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -26,12 +27,15 @@ public class PlaceBlockMixin {
 	private void mineScoreboard$onPlaceBlock(PlayerEntity player, World world, ItemStack itemInHand, int x, int y, int z, int face, float faceX, float faceY, float faceZ, CallbackInfoReturnable<Boolean> cir) {
 		if (cir.getReturnValue()) {
 			Scoreboard scoreboard = MinecraftServer.getInstance().getWorld(0).getScoreboard();
-			ScoreboardObjective scoreboardObjective = scoreboard.getObjective("Place");
-			if (scoreboardObjective != null) {
-				ScoreboardScore scoreboardScore = scoreboard.getScore(this.player.getName(), scoreboardObjective);
-				scoreboardScore.increase(1);
+			ScoreboardObjective objective = scoreboard.getObjective("Place");
+			if (objective != null) {
+				ScoreboardScore score = scoreboard.getScore(this.player.getName(), objective);
+				score.increase(1);
+				PlayerBoardManager.onScoreUpdate("Place", score);
 
-				PlayerBoardManager.onScoreUpdate("Place", scoreboardScore);
+				MineScoreboardMod.increaseTotalPlace();
+				ScoreboardScore totalScore = scoreboard.getScore(MineScoreboardMod.TOTAL_PLACE_NAME, objective);
+				PlayerBoardManager.onScoreUpdate("Place", totalScore);
 			}
 		}
 	}

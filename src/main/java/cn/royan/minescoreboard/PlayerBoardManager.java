@@ -19,15 +19,13 @@ import java.util.Set;
 import java.util.UUID;
 
 public class PlayerBoardManager {
-	private static final Map<UUID, Boolean> created = new HashMap<>();
 
 	private static final Map<UUID, String> playerBoards = new HashMap<>();
-	private static final Set<UUID> hiddenPlayers = new HashSet<>();  // 记录隐藏计分板的玩家
+	private static final Set<UUID> hiddenPlayers = new HashSet<>();
 	private static final String DEFAULT_BOARD = "Dig";
 
 	public static void setPlayerBoard(ServerPlayerEntity player, String boardName) {
 		playerBoards.put(player.getUuid(), boardName);
-
 		if (!hiddenPlayers.contains(player.getUuid())) {
 			sendBoardScores(player, boardName);
 		}
@@ -39,12 +37,10 @@ public class PlayerBoardManager {
 
 	public static void hideBoard(ServerPlayerEntity player) {
 		hiddenPlayers.add(player.getUuid());
-		// 发送空的显示包，隐藏侧边栏
 		player.networkHandler.sendPacket(new ScoreboardDisplayS2CPacket(1, null));
 	}
 
 	public static void showBoard(ServerPlayerEntity player) {
-
 		hiddenPlayers.remove(player.getUuid());
 		String boardName = getPlayerBoard(player.getUuid());
 		sendBoardScores(player, boardName);
@@ -65,7 +61,6 @@ public class PlayerBoardManager {
 				ScoreboardScoreS2CPacket packet = new ScoreboardScoreS2CPacket(score, 0);
 				player.networkHandler.sendPacket(packet);
 			}
-
 			player.networkHandler.sendPacket(new ScoreboardDisplayS2CPacket(1, objective));
 		}
 	}
@@ -104,7 +99,6 @@ public class PlayerBoardManager {
 
 	public static void onScoreUpdate(String boardName, ScoreboardScore score) {
 		List players = MinecraftServer.getInstance().getPlayerManager().players;
-
 		ScoreboardScoreS2CPacket packet = new ScoreboardScoreS2CPacket(score, 0);
 
 		for (Object obj : players) {
@@ -123,7 +117,5 @@ public class PlayerBoardManager {
 	}
 
 	public static void onPlayerLeave(ServerPlayerEntity player) {
-		// playerBoards.remove(player.getUuid());
-		// hiddenPlayers.remove(player.getUuid());
 	}
 }

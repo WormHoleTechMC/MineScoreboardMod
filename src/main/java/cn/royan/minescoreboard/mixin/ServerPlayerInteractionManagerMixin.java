@@ -1,5 +1,7 @@
 package cn.royan.minescoreboard.mixin;
 
+import cn.royan.minescoreboard.MineScoreboardMod;
+import cn.royan.minescoreboard.PlayerBoardManager;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.scoreboard.ScoreboardScore;
@@ -19,13 +21,19 @@ public class ServerPlayerInteractionManagerMixin {
 	public ServerPlayerEntity player;
 
 	@Inject(method = "mineBlock", at = @At("TAIL"))
-	private void exampleMod$onInit(int x, int y, int z, CallbackInfoReturnable<Boolean> cir) {
+	private void mineScoreboard$onMineBlock(int x, int y, int z, CallbackInfoReturnable<Boolean> cir) {
 		if (cir.getReturnValue()) {
-			System.out.println(x + " " + y + " " + z + "by " + this.player.getName());
 			Scoreboard scoreboard = MinecraftServer.getInstance().getWorld(0).getScoreboard();
-			ScoreboardObjective scoreboardObjective = scoreboard.getObjective("dig");
-			ScoreboardScore scoreboardScore = scoreboard.getScore(this.player.getName(), scoreboardObjective);
-			scoreboardScore.increase(1);
+			ScoreboardObjective objective = scoreboard.getObjective("Dig");
+			if (objective != null) {
+				ScoreboardScore score = scoreboard.getScore(this.player.getName(), objective);
+				score.increase(1);
+				PlayerBoardManager.onScoreUpdate("Dig", score);
+
+				MineScoreboardMod.increaseTotalDig();
+				ScoreboardScore totalScore = scoreboard.getScore(MineScoreboardMod.TOTAL_DIG_NAME, objective);
+				PlayerBoardManager.onScoreUpdate("Dig", totalScore);
+			}
 		}
 	}
 }

@@ -6,11 +6,10 @@ import net.minecraft.server.command.Command;
 import net.minecraft.server.command.source.CommandSource;
 import net.minecraft.server.entity.living.player.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class BoardCommand extends AbstractCommand {
+public class BoardCommand extends AbstractCommand implements Comparable {
 
 	@Override
 	public String getName() {
@@ -25,7 +24,7 @@ public class BoardCommand extends AbstractCommand {
 	@Override
 	public void run(CommandSource source, String[] args) {
 		if (!(source instanceof ServerPlayerEntity)) {
-			source.sendMessage(new LiteralText("该命令只能由玩家执行"));
+			source.sendMessage(new LiteralText("Only players can use this command"));
 			return;
 		}
 
@@ -34,33 +33,27 @@ public class BoardCommand extends AbstractCommand {
 		if (args.length < 1) {
 			String current = PlayerBoardManager.getPlayerBoard(player.getUuid());
 			boolean hidden = PlayerBoardManager.isHidden(player.getUuid());
-			source.sendMessage(new LiteralText("当前榜单: " + current + (hidden ? " (已隐藏)" : "")));
-			source.sendMessage(new LiteralText("用法: /board <dig|place|hide|show>"));
+			source.sendMessage(new LiteralText("Current Board: " + current + (hidden ? " (Hidden)" : "")));
+			source.sendMessage(new LiteralText("Usage: /board <dig|place|hide|show>"));
 			return;
 		}
 
 		String arg = args[0].toLowerCase();
 
-		switch (arg) {
-			case "dig":
-				PlayerBoardManager.setPlayerBoard(player, "Dig");
-				source.sendMessage(new LiteralText("已切换到 dig"));
-				break;
-			case "place":
-				PlayerBoardManager.setPlayerBoard(player, "Place");
-				source.sendMessage(new LiteralText("已切换到 Place"));
-				break;
-			case "hide":
-				PlayerBoardManager.hideBoard(player);
-				source.sendMessage(new LiteralText("已隐藏计分板"));
-				break;
-			case "show":
-				PlayerBoardManager.showBoard(player);
-				source.sendMessage(new LiteralText("已显示计分板"));
-				break;
-			default:
-				source.sendMessage(new LiteralText("无效参数，请使用 dig、place、hide 或 show"));
-				break;
+		if ("dig".equals(arg)) {
+			PlayerBoardManager.setPlayerBoard(player, "Dig");
+			source.sendMessage(new LiteralText("Switched to Dig board"));
+		} else if ("place".equals(arg)) {
+			PlayerBoardManager.setPlayerBoard(player, "Place");
+			source.sendMessage(new LiteralText("Switched to Place board"));
+		} else if ("hide".equals(arg)) {
+			PlayerBoardManager.hideBoard(player);
+			source.sendMessage(new LiteralText("Scoreboard hidden"));
+		} else if ("show".equals(arg)) {
+			PlayerBoardManager.showBoard(player);
+			source.sendMessage(new LiteralText("Scoreboard shown"));
+		} else {
+			source.sendMessage(new LiteralText("Invalid argument. Please use dig, place, hide, or show"));
 		}
 	}
 
@@ -84,8 +77,9 @@ public class BoardCommand extends AbstractCommand {
 
 	@Override
 	public int compareTo(Object o) {
-		if (!(o instanceof Command)) return 0;
-		Command command = (Command) o;
-		return this.getName().compareToIgnoreCase(command.getName());
+		if (o instanceof Command) {
+			return this.getName().compareTo(((Command) o).getName());
+		}
+		return 0;
 	}
 }

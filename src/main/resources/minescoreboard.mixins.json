@@ -4,6 +4,9 @@
   "package": "cn.royan.minescoreboard.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "CommandManagerMixin",
+    "PlaceBlockMixin",
+    "PlayerConnectionMixin",
     "ServerPlayerInteractionManagerMixin"
   ],
   "client": [
